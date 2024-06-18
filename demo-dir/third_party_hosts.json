@@ -1,0 +1,11 @@
+{
+  "hosts": [
+    "cdn-pci.optimizely.com",
+    "assets.gospringboard.io",
+    "cdn3.optimizely.com",
+    "cdn.heapanalytics.com",
+    "a16854766608.cdn.optimizely.com",
+    "logx.optimizely.com",
+    "heapanalytics.com"
+  ]
+}

@@ -15,9 +15,13 @@ const blockerOptions = {
     loadCosmeticFilters: false // We're only interested in network filters
 };
 
-const blockers = {
-    'easyprivacy.txt': PuppeteerBlocker.parse(fs.readFileSync(path.join(__dirname, '../data/blocklists/easyprivacy.txt'), 'utf8'), blockerOptions),
-    'easylist.txt': PuppeteerBlocker.parse(fs.readFileSync(path.join(__dirname, '../data/blocklists/easylist.txt'), 'utf8'), blockerOptions)
+// const blockers = {
+//     'easyprivacy.txt': PuppeteerBlocker.parse(fs.readFileSync(path.join(__dirname, '../data/blocklists/easyprivacy.txt'), 'utf8'), blockerOptions),
+//     'easylist.txt': PuppeteerBlocker.parse(fs.readFileSync(path.join(__dirname, '../data/blocklists/easylist.txt'), 'utf8'), blockerOptions)
+// };
+
+const accepted = {
+    'accepted.txt': PuppeteerBlocker.parse(fs.readFileSync(path.join(__dirname, '../data/accepted.txt'), 'utf8'), blockerOptions),
 };
 
 export const setUpThirdPartyTrackersInspector = async (
@@ -30,16 +34,16 @@ export const setUpThirdPartyTrackersInspector = async (
     }
 
     page.on('request', async request => {
-        let isBlocked = false;
+        let isBlocked = true;
 
-        for (const [listName, blocker] of Object.entries(blockers)) {
-            const { match, filter } = blocker.match(fromPuppeteerDetails(request));
+        for (const [listName, accept] of Object.entries(accepted)) {
+
+            // check if the request was made by an accepted third party
+            const { match } = accept.match(fromPuppeteerDetails(request));
 
             if (!match) {
-                continue;
+                isBlocked = false;
             }
-
-            isBlocked = true;
 
             const params = new URL(request.url()).searchParams;
             const query = {};
@@ -54,7 +58,7 @@ export const setUpThirdPartyTrackersInspector = async (
             eventDataHandler({
                 data: {
                     query,
-                    filter: filter.toString(),
+                    filter: isBlocked.toString(),
                     listName
                 },
                 stack: [

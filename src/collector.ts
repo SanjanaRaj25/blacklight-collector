@@ -37,15 +37,18 @@ const DEFAULT_OPTIONS = {
     saveScreenshots: true,
     headers: {},
     blTests: [
-        'behaviour_event_listeners',
-        'canvas_fingerprinters',
-        'canvas_font_fingerprinters',
-        'cookies',
-        'fb_pixel_events',
-        'key_logging',
-        'session_recorders',
         'third_party_trackers'
     ],
+    // blTests: [
+    //     'behaviour_event_listeners',
+    //     'canvas_fingerprinters',
+    //     'canvas_font_fingerprinters',
+    //     'cookies',
+    //     'fb_pixel_events',
+    //     'key_logging',
+    //     'session_recorders',
+    //     'third_party_trackers'
+    // ],
     puppeteerExecutablePath: null as string | null,
     extraChromiumArgs: [] as string[],
     extraPuppeteerOptions: {} as Partial<PuppeteerLaunchOptions>
@@ -259,6 +262,18 @@ export const collect = async (inUrl: string, args: CollectorOptions) => {
         await autoScroll(page);
         // console.log('... done with autoScroll');
 
+        // Inside the collect function, after generating reports and before returning the final result
+        const saveThirdPartyHosts = () => {
+            const thirdPartyHostsFile = join(args.outDir, 'third_party_hosts.json');
+            const thirdPartyHosts = Array.from(hosts.requests.third_party);
+            const data = JSON.stringify({ hosts: thirdPartyHosts }, null, 2);
+            writeFileSync(thirdPartyHostsFile, data);
+        };
+
+        // Call the function to save third-party hosts
+        saveThirdPartyHosts();
+
+
         let subDomainLinks = [];
         if (getSubdomain(output.uri_dest) !== 'www') {
             subDomainLinks = outputLinks.first_party.filter(f => {
@@ -406,11 +421,6 @@ export const collect = async (inUrl: string, args: CollectorOptions) => {
             console.log("closing browser");
             await browser.close();
         }
-        // if (typeof userDataDir !== 'undefined') {
-        //     clearDir(userDataDir, false);
-        // }
-        // if (args.outDir.includes('bl-tmp')) {
-        //     clearDir(args.outDir, false);
-        // }
     }
 };
+
